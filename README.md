@@ -206,7 +206,3 @@ Migração: `dump/schema.sql`
 texto_cifrado_rem (cópia para remetente), assinatura, hash_texto, algoritmo, enviado_em, lida
 
 **`logs`** — assinatura_id, resultado (VÁLIDA/INVÁLIDA), verificado_em, ip
-
-## Autores
-
-Projeto acadêmico — Segurança da Informação
