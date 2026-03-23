@@ -49,6 +49,21 @@ def init_db(app):
                 ip TEXT,
                 FOREIGN KEY(assinatura_id) REFERENCES assinaturas(id)
             );
+
+            CREATE TABLE IF NOT EXISTS mensagens (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                remetente_id        INTEGER NOT NULL,
+                destinatario_id     INTEGER NOT NULL,
+                texto_cifrado       TEXT NOT NULL,
+                texto_cifrado_rem   TEXT NOT NULL,
+                assinatura          TEXT NOT NULL,
+                hash_texto          TEXT NOT NULL,
+                algoritmo           TEXT NOT NULL DEFAULT 'RSA-OAEP-AES256GCM+PKCS1v15-SHA256',
+                enviado_em          TEXT NOT NULL,
+                lida                INTEGER NOT NULL DEFAULT 0,
+                FOREIGN KEY(remetente_id)    REFERENCES usuarios(id),
+                FOREIGN KEY(destinatario_id) REFERENCES usuarios(id)
+            );
         """)
         db.commit()
         db.close()

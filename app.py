@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, redirect, session, g
 from database import get_db, init_db
-from crypto_utils import gerar_chaves, assinar, verificar, hash_sha256
+from crypto_utils import gerar_chaves, assinar, verificar, hash_sha256, cifrar_para, decifrar_com
 import hashlib
 from datetime import datetime
 
@@ -228,6 +228,174 @@ def history():
     ).fetchall()
 
     return render_template("history.html", assinaturas=assinaturas)
+
+
+# ─── CHAT: LISTA DE USUÁRIOS ─────────────────────────────────────────────────
+@app.route("/chat")
+def chat_users():
+    if not login_required():
+        return redirect("/login")
+
+    db = get_db()
+    usuarios = db.execute(
+        "SELECT id, nome FROM usuarios WHERE id != ? ORDER BY nome",
+        (session["user_id"],)
+    ).fetchall()
+
+    nao_lidas = {}
+    rows = db.execute("""
+        SELECT remetente_id, COUNT(*) as total FROM mensagens
+        WHERE destinatario_id = ? AND lida = 0
+        GROUP BY remetente_id
+    """, (session["user_id"],)).fetchall()
+    for r in rows:
+        nao_lidas[r["remetente_id"]] = r["total"]
+
+    return render_template("chat_users.html", usuarios=usuarios, nao_lidas=nao_lidas)
+
+
+# ─── CHAT: CONVERSA COM USUÁRIO ───────────────────────────────────────────────
+@app.route("/chat/<int:outro_id>", methods=["GET", "POST"])
+def chat_conversa(outro_id):
+    if not login_required():
+        return redirect("/login")
+
+    db = get_db()
+    outro = db.execute("SELECT id, nome FROM usuarios WHERE id=?", (outro_id,)).fetchone()
+    if not outro:
+        return redirect("/chat")
+
+    erro = None
+
+    if request.method == "POST":
+        texto = request.form.get("texto", "").strip()
+        if not texto:
+            erro = "Mensagem vazia."
+        else:
+            chave_dest = db.execute(
+                "SELECT publica FROM chaves WHERE usuario_id=?", (outro_id,)
+            ).fetchone()
+            chave_rem = db.execute(
+                "SELECT publica, privada FROM chaves WHERE usuario_id=?", (session["user_id"],)
+            ).fetchone()
+            try:
+                # Cifra para o destinatário (só ele lê)
+                texto_cifrado     = cifrar_para(texto, chave_dest["publica"])
+                # Cifra para o próprio remetente (para ele poder reler)
+                texto_cifrado_rem = cifrar_para(texto, chave_rem["publica"])
+                h   = hash_sha256(texto)
+                sig = assinar(texto, chave_rem["privada"])
+                db.execute("""
+                    INSERT INTO mensagens
+                        (remetente_id, destinatario_id, texto_cifrado, texto_cifrado_rem,
+                         assinatura, hash_texto, algoritmo, enviado_em, lida)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0)
+                """, (session["user_id"], outro_id, texto_cifrado, texto_cifrado_rem,
+                      sig, h, "RSA-OAEP-AES256GCM+PKCS1v15-SHA256", agora()))
+                db.commit()
+            except Exception as e:
+                erro = f"Erro ao cifrar/assinar: {e}"
+
+    msgs_raw = db.execute("""
+        SELECT m.*, u.nome as remetente_nome
+        FROM mensagens m
+        JOIN usuarios u ON u.id = m.remetente_id
+        WHERE (m.remetente_id=? AND m.destinatario_id=?)
+           OR (m.remetente_id=? AND m.destinatario_id=?)
+        ORDER BY m.id ASC
+    """, (session["user_id"], outro_id, outro_id, session["user_id"])).fetchall()
+
+    chave_priv_logado = db.execute(
+        "SELECT privada FROM chaves WHERE usuario_id=?", (session["user_id"],)
+    ).fetchone()["privada"]
+
+    mensagens = []
+    for m in msgs_raw:
+        msg = dict(m)
+        sou_destinatario = (m["destinatario_id"] == session["user_id"])
+        sou_remetente    = (m["remetente_id"]    == session["user_id"])
+
+        if sou_destinatario:
+            try:
+                msg["texto_claro"] = decifrar_com(m["texto_cifrado"], chave_priv_logado)
+                chave_pub_rem = db.execute(
+                    "SELECT publica FROM chaves WHERE usuario_id=?", (m["remetente_id"],)
+                ).fetchone()["publica"]
+                msg["assinatura_valida"] = verificar(msg["texto_claro"], m["assinatura"], chave_pub_rem)
+            except Exception:
+                msg["texto_claro"] = None
+                msg["assinatura_valida"] = False
+        elif sou_remetente:
+            try:
+                msg["texto_claro"] = decifrar_com(m["texto_cifrado_rem"], chave_priv_logado)
+                msg["assinatura_valida"] = True  # remetente confia em si mesmo
+            except Exception:
+                msg["texto_claro"] = None
+                msg["assinatura_valida"] = False
+        else:
+            msg["texto_claro"] = None
+            msg["assinatura_valida"] = False
+
+        mensagens.append(msg)
+
+    db.execute("""
+        UPDATE mensagens SET lida = 1
+        WHERE destinatario_id = ? AND remetente_id = ?
+    """, (session["user_id"], outro_id))
+    db.commit()
+
+    return render_template("chat_conversa.html",
+        outro=outro, mensagens=mensagens, erro=erro)
+
+
+# ─── CHAT: PAINEL — TODAS AS MENSAGENS DO SISTEMA ────────────────────────────
+@app.route("/chat/admin/todas")
+def chat_admin_todas():
+    if not login_required():
+        return redirect("/login")
+
+    db = get_db()
+    msgs_raw = db.execute("""
+        SELECT m.*, r.nome as remetente_nome, d.nome as destinatario_nome
+        FROM mensagens m
+        JOIN usuarios r ON r.id = m.remetente_id
+        JOIN usuarios d ON d.id = m.destinatario_id
+        ORDER BY m.id DESC
+    """).fetchall()
+
+    chave_priv = db.execute(
+        "SELECT privada FROM chaves WHERE usuario_id=?", (session["user_id"],)
+    ).fetchone()["privada"]
+
+    mensagens = []
+    for m in msgs_raw:
+        msg = dict(m)
+        sou_destinatario = (m["destinatario_id"] == session["user_id"])
+        sou_remetente    = (m["remetente_id"]    == session["user_id"])
+
+        if sou_destinatario:
+            try:
+                msg["texto_claro"] = decifrar_com(m["texto_cifrado"], chave_priv)
+                chave_pub_rem = db.execute(
+                    "SELECT publica FROM chaves WHERE usuario_id=?", (m["remetente_id"],)
+                ).fetchone()["publica"]
+                msg["assinatura_valida"] = verificar(msg["texto_claro"], m["assinatura"], chave_pub_rem)
+            except Exception:
+                msg["texto_claro"] = None
+                msg["assinatura_valida"] = None
+        elif sou_remetente:
+            try:
+                msg["texto_claro"] = decifrar_com(m["texto_cifrado_rem"], chave_priv)
+                msg["assinatura_valida"] = True
+            except Exception:
+                msg["texto_claro"] = None
+                msg["assinatura_valida"] = None
+        else:
+            msg["texto_claro"] = None
+            msg["assinatura_valida"] = None
+        mensagens.append(msg)
+
+    return render_template("chat_admin.html", mensagens=mensagens)
 
 
 # ─── TESTES PÚBLICOS ─────────────────────────────────────────────────────────

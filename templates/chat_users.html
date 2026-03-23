@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}Chat — SignVault{% endblock %}
+
+{% block content %}
+<div class="flex-between" style="margin-bottom:2rem;">
+    <div>
+        <div class="tag">Mensagens cifradas</div>
+        <h1>Chat seguro</h1>
+        <p class="muted small">Mensagens cifradas com RSA-OAEP + AES-256-GCM e assinadas com RSA-PKCS1v15.</p>
+    </div>
+    <a href="/chat/admin/todas" class="btn btn-secondary">🌐 Ver todas do sistema</a>
+</div>
+
+{% if usuarios %}
+<div style="display:flex; flex-direction:column; gap:0.6rem;">
+    {% for u in usuarios %}
+    <a href="/chat/{{ u.id }}" style="text-decoration:none;">
+        <div class="card" style="display:flex; align-items:center; justify-content:space-between; padding:1rem 1.25rem; cursor:pointer;">
+            <div class="flex" style="gap:0.75rem;">
+                <div style="width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,var(--accent2),var(--accent));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.9rem;color:#fff;flex-shrink:0;">
+                    {{ u.nome[0].upper() }}
+                </div>
+                <div>
+                    <div style="font-weight:700; font-family:var(--sans);">{{ u.nome }}</div>
+                    <div class="muted small mono">ID #{{ u.id }}</div>
+                </div>
+            </div>
+            <div class="flex" style="gap:0.75rem;">
+                {% if nao_lidas.get(u.id) %}
+                <span style="background:var(--accent);color:#000;border-radius:99px;padding:0.15rem 0.55rem;font-family:var(--mono);font-size:0.72rem;font-weight:700;">
+                    {{ nao_lidas[u.id] }} nova{% if nao_lidas[u.id] > 1 %}s{% endif %}
+                </span>
+                {% endif %}
+                <span style="color:var(--muted); font-size:0.85rem;">→</span>
+            </div>
+        </div>
+    </a>
+    {% endfor %}
+</div>
+{% else %}
+<div class="card" style="text-align:center; padding:3rem;">
+    <p class="muted">Nenhum outro usuário cadastrado ainda.</p>
+</div>
+{% endif %}
+
+<div class="alert alert-info" style="margin-top:2rem;">
+    🔒 Cada mensagem é cifrada com a <strong>chave pública do destinatário</strong> (RSA-OAEP + AES-256-GCM) e assinada com sua chave privada. Somente o destinatário consegue decifrar.
+</div>
+{% endblock %}
