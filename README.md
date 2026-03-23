@@ -9,6 +9,7 @@ Cadastro → gera par de chaves RSA-2048 (pub/priv) → armazena no DB
 Login    → sessão autenticada
 Assinar  → RSA-PKCS1v15(SHA-256) → persiste assinatura + hash + metadados
 Verificar→ rota pública /verify/<id> → retorna VÁLIDA / INVÁLIDA + log
+Testes   → rota pública /test → executa suite ao vivo no navegador
 ```
 
 ## Como rodar
@@ -62,6 +63,7 @@ CMD ["python", "app.py"]
 | GET      | `/mykey`       | ✓    | Exibe chave pública PEM            |
 | GET      | `/verify/<id>` | —    | Verificar assinatura por ID        |
 | GET/POST | `/verify`      | —    | Verificar por ID ou dados manuais  |
+| GET      | `/test`        | —    | Suite de testes automáticos        |
 
 ## Exemplo de requisição/resposta
 
@@ -91,15 +93,32 @@ Resposta (redirect + exibe):
 
 ## Casos de teste
 
+Há duas formas de executar os testes:
+
+### 1. Via linha de comando
+
 ```bash
 python tests.py
 ```
 
-- **Teste 1** ✔ Positivo: verifica assinatura correta → `VÁLIDA`
-- **Teste 2** ✔ Negativo: texto adulterado → `INVÁLIDA`
-- **Teste 3** ✔ Negativo: assinatura com bits corrompidos → `INVÁLIDA`
-- **Teste 4** ✔ Negativo: chave pública errada → `INVÁLIDA`
-- **Teste 5** ✔ Hash SHA-256 determinístico e sensível a alterações
+### 2. Via rota web (pública)
+
+```
+GET /test
+```
+
+Acesse `http://localhost:5000/test` no navegador. Os testes são executados ao vivo a cada requisição, com chaves geradas na hora, e o resultado é exibido visualmente com tempo de execução por caso.
+
+### Casos cobertos
+
+| # | Caso | Tipo | Resultado esperado |
+|---|------|------|--------------------|
+| 1 | Geração de chaves RSA-2048 | Crypto isolada | Chaves PEM válidas |
+| 2 | Assinatura + verificação correta | ✅ Positivo | `VÁLIDA` |
+| 3 | Texto adulterado | ❌ Negativo | `INVÁLIDA` |
+| 4 | Assinatura com bits corrompidos | ❌ Negativo | `INVÁLIDA` |
+| 5 | Chave pública de outro par | ❌ Negativo | `INVÁLIDA` |
+| 6 | Hash SHA-256 determinístico | Crypto isolada | Hashes consistentes |
 
 ## Banco de dados
 
@@ -121,6 +140,6 @@ Migração: `dump/schema.sql`
 - **Serialização**: chave pública em SubjectPublicKeyInfo PEM; privada em PKCS8 PEM sem senha
 - **Assinatura armazenada**: Base64 da saída RSA
 
-## Autores
+## Autora
 
-Projeto acadêmico — Segurança da Informação
+Geisbelly Victória
