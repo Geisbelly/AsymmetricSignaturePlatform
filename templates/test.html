@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}Testes — SignVault{% endblock %}
+
+{% block content %}
+<div class="flex-between" style="margin-bottom: 2rem;">
+    <div>
+        <div class="tag">Rota pública</div>
+        <h1>Suite de testes</h1>
+        <p class="muted small">Crypto isolada + validações positivas e negativas — executados ao vivo.</p>
+    </div>
+    <div style="text-align:right;">
+        {% if passou == total %}
+            <div style="font-size:2.5rem;">🎉</div>
+            <div style="font-family:var(--mono); color:var(--ok); font-weight:700;">{{ passou }}/{{ total }} passaram</div>
+        {% else %}
+            <div style="font-size:2.5rem;">⚠️</div>
+            <div style="font-family:var(--mono); color:var(--danger); font-weight:700;">{{ passou }}/{{ total }} passaram</div>
+        {% endif %}
+        <a href="/test" class="btn btn-secondary" style="margin-top:0.5rem; font-size:0.75rem;">↻ Reexecutar</a>
+    </div>
+</div>
+
+<!-- Barra de progresso -->
+<div style="background: var(--border); border-radius:4px; height:6px; margin-bottom:2rem; overflow:hidden;">
+    <div style="height:100%; width:{{ (passou / total * 100)|int }}%; background: {% if passou == total %}var(--ok){% else %}var(--danger){% endif %}; transition: width 0.5s;"></div>
+</div>
+
+{% for r in resultados %}
+<div class="card" style="margin-bottom:1rem; border-left: 3px solid {% if r.status == 'ok' %}var(--ok){% else %}var(--danger){% endif %};">
+    <div class="flex-between" style="margin-bottom:0.75rem;">
+        <div>
+            <span class="badge {% if r.status == 'ok' %}badge-ok{% else %}badge-err{% endif %}" style="margin-right:0.5rem;">
+                {% if r.status == 'ok' %}✔ PASSOU{% else %}❌ FALHOU{% endif %}
+            </span>
+            <strong>{{ r.nome }}</strong>
+        </div>
+        <span class="muted small mono">{{ r.duracao }}ms</span>
+    </div>
+    <p class="muted small" style="margin-bottom:0.75rem;">{{ r.descricao }}</p>
+
+    {% for p in r.passos %}
+    <div style="font-family:var(--mono); font-size:0.8rem; padding:0.3rem 0; border-bottom:1px solid rgba(30,45,66,0.4); display:flex; align-items:flex-start; gap:0.5rem;">
+        {% if p.ok is none %}
+            <span style="color:var(--muted);">  ·</span>
+        {% elif p.ok %}
+            <span style="color:var(--ok);">  ✔</span>
+        {% else %}
+            <span style="color:var(--danger);">  ❌</span>
+        {% endif %}
+        <span style="color:var(--text); word-break:break-all;">{{ p.texto }}</span>
+    </div>
+    {% endfor %}
+</div>
+{% endfor %}
+
+<div class="alert alert-info" style="margin-top:1.5rem;">
+    Esta rota é <strong>pública</strong> — não requer login. Cada acesso executa os testes do zero com chaves geradas na hora.
+</div>
+{% endblock %}

@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Minha chave pública — SignVault{% endblock %}
+
+{% block content %}
+<div class="tag">Criptografia assimétrica</div>
+<h1>Minha chave pública</h1>
+<p class="muted small" style="margin-bottom:2rem;">Compartilhe sua chave pública com quem precisar verificar suas assinaturas.</p>
+
+<div class="card">
+    <label>Chave pública RSA-2048 (PEM / SubjectPublicKeyInfo)</label>
+    <pre>{{ chave }}</pre>
+
+    <button onclick="navigator.clipboard.writeText(document.querySelector('pre').textContent)" class="btn btn-secondary" style="margin-top:0.5rem;">
+        📋 Copiar chave
+    </button>
+</div>
+
+<div class="alert alert-info" style="margin-top:1rem;">
+    Sua chave <strong>privada</strong> nunca é exibida e permanece no servidor. Nunca a compartilhe.
+</div>
+{% endblock %}

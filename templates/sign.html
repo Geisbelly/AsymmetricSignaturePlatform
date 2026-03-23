@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Assinar — SignVault{% endblock %}
+
+{% block content %}
+<div class="tag">Assinatura digital</div>
+<h1>Assinar texto</h1>
+<p class="muted small" style="margin-bottom:2rem;">O texto será assinado com sua chave privada RSA-2048 (SHA-256). O hash e a assinatura ficam persistidos.</p>
+
+{% if erro %}
+<div class="alert alert-err">{{ erro }}</div>
+{% endif %}
+
+<div class="card">
+    <form method="post">
+        <label>Mensagem / Documento</label>
+        <textarea name="texto" placeholder="Digite aqui o texto que deseja assinar..." required></textarea>
+
+        <button type="submit" class="btn btn-primary">✍️ &nbsp;Assinar agora</button>
+    </form>
+</div>
+
+{% if resultado %}
+<div class="card" style="border-color: rgba(0,230,118,0.3); background: rgba(0,230,118,0.03);">
+    <div class="flex-between" style="margin-bottom:1rem;">
+        <div>
+            <div class="tag" style="color: var(--ok);">Assinatura gerada</div>
+            <div class="sig-id">#{{ resultado.id }}</div>
+        </div>
+        <span class="badge badge-ok">✔ ASSINADO</span>
+    </div>
+
+    <label>Hash SHA-256 do texto</label>
+    <code style="display:block; padding:0.6rem; margin-bottom:1rem; word-break:break-all;">{{ resultado.hash }}</code>
+
+    <label>Assinatura (prévia)</label>
+    <code style="display:block; padding:0.6rem; margin-bottom:1.5rem;">{{ resultado.assinatura }}</code>
+
+    <div class="flex" style="gap:0.5rem; flex-wrap:wrap;">
+        <a href="/verify/{{ resultado.id }}" class="btn btn-secondary">🔍 Verificar agora</a>
+        <span class="muted small" style="font-family:var(--mono);">Compartilhe o ID <strong>#{{ resultado.id }}</strong> para que outros verifiquem.</span>
+    </div>
+</div>
+{% endif %}
+
+<div class="alert alert-info" style="margin-top: 1rem;">
+    <strong>Como funciona:</strong> seu texto é assinado com RSA-PKCS1v15 + SHA-256. A assinatura prova que você, e somente você, criou aquela mensagem — e que ela não foi alterada.
+</div>
+{% endblock %}

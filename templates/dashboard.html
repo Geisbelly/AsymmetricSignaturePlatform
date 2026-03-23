@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — SignVault{% endblock %}
+
+{% block content %}
+<div class="tag">Área autenticada</div>
+<h1>Olá, {{ session["user_nome"] }} 👋</h1>
+<p class="muted small" style="margin-bottom: 2rem;">Seu cofre de assinaturas digitais.</p>
+
+<div class="grid2" style="margin-bottom: 2rem;">
+    <a href="/sign" class="card" style="text-decoration:none; cursor:pointer;">
+        <div style="font-size:1.8rem; margin-bottom:0.5rem;">✍️</div>
+        <h3>Assinar texto</h3>
+        <p class="muted small">Assine qualquer mensagem com sua chave privada RSA.</p>
+    </a>
+    <a href="/verify" class="card" style="text-decoration:none; cursor:pointer;">
+        <div style="font-size:1.8rem; margin-bottom:0.5rem;">🔍</div>
+        <h3>Verificar assinatura</h3>
+        <p class="muted small">Página pública — qualquer pessoa pode verificar.</p>
+    </a>
+    <a href="/history" class="card" style="text-decoration:none; cursor:pointer;">
+        <div style="font-size:1.8rem; margin-bottom:0.5rem;">📋</div>
+        <h3>Histórico</h3>
+        <p class="muted small">Todas as suas assinaturas geradas.</p>
+    </a>
+    <a href="/mykey" class="card" style="text-decoration:none; cursor:pointer;">
+        <div style="font-size:1.8rem; margin-bottom:0.5rem;">🔑</div>
+        <h3>Minha chave pública</h3>
+        <p class="muted small">Compartilhe para que outros possam verificar suas assinaturas.</p>
+    </a>
+</div>
+
+{% if assinaturas %}
+<div class="tag">Assinaturas recentes</div>
+<div class="card" style="padding:0; overflow:hidden;">
+<table>
+    <thead>
+        <tr>
+            <th>#ID</th>
+            <th>Texto</th>
+            <th>Algoritmo</th>
+            <th>Data</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for s in assinaturas %}
+        <tr>
+            <td><span class="badge badge-info">#{{ s.id }}</span></td>
+            <td style="max-width:250px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ s.texto }}</td>
+            <td><span class="badge badge-info">{{ s.algoritmo }}</span></td>
+            <td class="muted small">{{ s.criado_em }}</td>
+            <td><a href="/verify/{{ s.id }}" class="btn btn-secondary" style="padding:0.3rem 0.7rem; font-size:0.7rem;">Verificar</a></td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+</div>
+<p style="text-align:right; margin-top:0.5rem;"><a href="/history" class="small">Ver todas →</a></p>
+{% else %}
+<div class="card" style="text-align:center; padding: 2rem;">
+    <p class="muted">Nenhuma assinatura ainda. <a href="/sign">Assine sua primeira mensagem →</a></p>
+</div>
+{% endif %}
+{% endblock %}

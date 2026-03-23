@@ -1,0 +1,72 @@
+body {
+    margin: 0;
+    font-family: Arial;
+    background: #0f172a;
+    color: white;
+}
+
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    padding: 15px;
+    background: #020617;
+    border-bottom: 1px solid #1e293b;
+}
+
+.logo {
+    font-weight: bold;
+}
+
+.nav-right a {
+    margin-left: 15px;
+    text-decoration: none;
+    color: #38bdf8;
+}
+
+.container {
+    padding: 30px;
+}
+
+.card {
+    background: #1e293b;
+    padding: 20px;
+    margin: 10px 0;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.card:hover {
+    background: #334155;
+}
+
+.chat-box {
+    display: flex;
+    flex-direction: column;
+}
+
+.msg {
+    padding: 10px;
+    margin: 5px;
+    border-radius: 10px;
+    width: fit-content;
+    max-width: 70%;
+}
+
+.me {
+    background: #22c55e;
+    align-self: flex-end;
+}
+
+.other {
+    background: #334155;
+    align-self: flex-start;
+}
+
+.ok {
+    color: lightgreen;
+}
+
+.erro {
+    color: red;
+}

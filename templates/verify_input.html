@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}Verificar assinatura — SignVault{% endblock %}
+
+{% block content %}
+<div class="tag">Verificação pública</div>
+<h1>Verificar assinatura</h1>
+<p class="muted small" style="margin-bottom:2rem;">Qualquer pessoa pode verificar uma assinatura — sem precisar de conta.</p>
+
+{% if resultado %}
+<div class="card" style="border-color: {{ 'rgba(0,230,118,0.4)' if resultado == 'VÁLIDA' else 'rgba(255,23,68,0.4)' }}; background: {{ 'rgba(0,230,118,0.04)' if resultado == 'VÁLIDA' else 'rgba(255,23,68,0.04)' }}; text-align:center; padding: 2rem; margin-bottom:1.5rem;">
+    <div style="font-size: 3rem; margin-bottom:0.5rem;">{{ '✅' if resultado == 'VÁLIDA' else '❌' }}</div>
+    <div style="font-size: 1.8rem; font-weight:800; font-family:var(--mono); color: {{ 'var(--ok)' if resultado == 'VÁLIDA' else 'var(--danger)' }};">
+        {{ resultado }}
+    </div>
+</div>
+{% endif %}
+
+{% if erro %}
+<div class="alert alert-err">{{ erro }}</div>
+{% endif %}
+
+<div class="card">
+    <div class="tag">Verificar por ID</div>
+    <form method="post">
+        <input type="hidden" name="modo" value="id">
+        <label>ID da assinatura</label>
+        <input type="text" name="sig_id" placeholder="ex: 42">
+        <button type="submit" class="btn btn-primary">🔍 &nbsp;Verificar</button>
+    </form>
+</div>
+
+<div class="card">
+    <div class="tag">Verificar manualmente (colar dados)</div>
+    <form method="post">
+        <input type="hidden" name="modo" value="manual">
+
+        <label>Texto original</label>
+        <textarea name="texto" placeholder="Cole aqui o texto original que foi assinado..."></textarea>
+
+        <label>Assinatura (Base64)</label>
+        <textarea name="assinatura" placeholder="Cole a assinatura em Base64..." style="min-height:80px;"></textarea>
+
+        <label>Chave pública (PEM)</label>
+        <textarea name="chave_publica" placeholder="-----BEGIN PUBLIC KEY-----&#10;...&#10;-----END PUBLIC KEY-----" style="min-height:120px; font-size:0.75rem;"></textarea>
+
+        <button type="submit" class="btn btn-purple">🔐 &nbsp;Verificar manualmente</button>
+    </form>
+</div>
+{% endblock %}

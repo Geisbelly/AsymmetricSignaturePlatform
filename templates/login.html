@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Login — SignVault{% endblock %}
+
+{% block content %}
+<div style="max-width:420px; margin: 4rem auto;">
+    <div class="tag">Autenticação</div>
+    <h1>Login</h1>
+    <p class="muted small" style="margin-bottom: 2rem;">Acesse sua área de assinaturas digitais.</p>
+
+    {% if erro %}
+    <div class="alert alert-err">{{ erro }}</div>
+    {% endif %}
+
+    <div class="card">
+        <form method="post">
+            <label>Usuário</label>
+            <input type="text" name="nome" placeholder="seu_usuario" autocomplete="username" required>
+
+            <label>Senha</label>
+            <input type="password" name="senha" placeholder="••••••••" autocomplete="current-password" required>
+
+            <button type="submit" class="btn btn-primary" style="width:100%;">→ Entrar</button>
+        </form>
+    </div>
+
+    <p class="small muted" style="text-align:center; margin-top:1rem;">
+        Não tem conta? <a href="/register">Cadastre-se</a>
+    </p>
+</div>
+{% endblock %}

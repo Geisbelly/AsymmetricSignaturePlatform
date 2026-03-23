@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Histórico — SignVault{% endblock %}
+
+{% block content %}
+<div class="flex-between" style="margin-bottom:2rem;">
+    <div>
+        <div class="tag">Suas assinaturas</div>
+        <h1>Histórico</h1>
+    </div>
+    <a href="/sign" class="btn btn-primary">+ Nova assinatura</a>
+</div>
+
+{% if assinaturas %}
+<div class="card" style="padding:0; overflow:hidden;">
+<table>
+    <thead>
+        <tr>
+            <th>#ID</th>
+            <th>Texto</th>
+            <th>Hash SHA-256</th>
+            <th>Algoritmo</th>
+            <th>Data</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for s in assinaturas %}
+        <tr>
+            <td><span class="badge badge-info">#{{ s.id }}</span></td>
+            <td style="max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-family:var(--mono); font-size:0.82rem;">{{ s.texto }}</td>
+            <td style="max-width:120px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"><code style="font-size:0.72rem;">{{ s.hash_texto[:16] }}…</code></td>
+            <td><span class="badge badge-info">{{ s.algoritmo }}</span></td>
+            <td class="muted small mono">{{ s.criado_em }}</td>
+            <td><a href="/verify/{{ s.id }}" class="btn btn-secondary" style="padding:0.3rem 0.7rem; font-size:0.7rem;">Verificar</a></td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+</div>
+{% else %}
+<div class="card" style="text-align:center; padding:3rem;">
+    <p class="muted">Nenhuma assinatura ainda. <a href="/sign">Crie a primeira →</a></p>
+</div>
+{% endif %}
+{% endblock %}
